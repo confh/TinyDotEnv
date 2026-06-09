@@ -1,0 +1,33 @@
+import std "fs";
+import std "process";
+
+// Loads environment variables from a specified .env file and sets them in the current process environment.
+// Parses each line of the file, skipping empty lines and comments (lines starting with #).
+// Splits valid lines into key-value pairs separated by "=", removes surrounding quotes from values if present,
+// and applies them to the process environment using process.setEnv().
+// 
+// @param path - Optional path to the environment file, defaults to ".env" if not provided.
+export fn loadEnv(path = ".env") {
+    const file = fs.readFile(path)
+
+    file.split("\n").forEach(fn(_, line: string) {
+        if (line.trim() == "" or line.startsWith("#")) {
+            return
+        }
+
+        const parts = line.split("=")
+        if (parts.length() < 2) {
+            return
+        }
+
+        const key: string = parts[0]
+
+        let value: string = parts[1]
+
+        if value.startsWith('"') and value.endsWith('"') {
+            value = value.replace('"', "").replace('"', "")
+        }
+
+        process.setEnv(key, value)
+    })
+}
