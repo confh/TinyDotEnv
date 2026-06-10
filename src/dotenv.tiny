@@ -11,18 +11,40 @@ export fn loadEnv(path = ".env") {
     const file = fs.readFile(path)
 
     file.split("\n").forEach(fn(_, line: string) {
-        if (line.trim() == "" or line.startsWith("#")) {
+        const trimmed = line.trim()
+
+        if trimmed == "" or trimmed.startsWith("#") {
             return
         }
 
-        const parts = line.split("=")
-        if (parts.length() < 2) {
+        const parts: array:string = trimmed.split("=")
+
+        if parts.length() < 2 {
             return
         }
 
-        const key: string = parts[0]
+        const key = parts[0].trim()
 
-        let value: string = parts[1]
+        if key == "" {
+            return
+        }
+
+        let value = ""
+
+        parts.forEach(fn(index: number, part: string) {
+            if index == 0 {
+                return
+            }
+
+            if index == 1 {
+                value = part
+                return
+            }
+
+            value = value + "=" + part
+        })
+
+        value = value.trim()
 
         if value.startsWith('"') and value.endsWith('"') {
             value = value.replace('"', "").replace('"', "")
