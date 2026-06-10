@@ -5,51 +5,48 @@ import std "process";
 // Parses each line of the file, skipping empty lines and comments (lines starting with #).
 // Splits valid lines into key-value pairs separated by "=", removes surrounding quotes from values if present,
 // and applies them to the process environment using process.setEnv().
-// 
+//
 // @param path - Optional path to the environment file, defaults to ".env" if not provided.
 export fn loadEnv(path = ".env") {
     const file = fs.readFile(path)
 
-    file.split("\n").forEach(fn(_, line: string) {
+    for line in file.split("\n") {
         const trimmed = line.trim()
 
-        if trimmed == "" or trimmed.startsWith("#") {
-            return
-        }
+        if trimmed != "" and ! trimmed.startsWith("#") {
+            const parts = trimmed.split("=")
 
-        const parts: array:string = trimmed.split("=")
+            if parts.length() >= 2 {
+                const key = parts[0].trim()
 
-        if parts.length() < 2 {
-            return
-        }
+                if key != "" {
+                    let value = ""
 
-        const key = parts[0].trim()
+                    let seenKey = false
+                    let startedValue = false
 
-        if key == "" {
-            return
-        }
+                    for part in parts {
+                        if seenKey {
+                            if startedValue {
+                                value = value + "=" + part
+                            } else {
+                                value = part
+                                startedValue = true
+                            }
+                        } else {
+                            seenKey = true
+                        }
+                    }
 
-        let value = ""
+                    value = value.trim()
 
-        parts.forEach(fn(index: number, part: string) {
-            if index == 0 {
-                return
+                    if value.startsWith('"') and value.endsWith('"') {
+                        value = value.substring(1, value.length() - 1)
+                    }
+
+                    process.setEnv(key, value)
+                }
             }
-
-            if index == 1 {
-                value = part
-                return
-            }
-
-            value = value + "=" + part
-        })
-
-        value = value.trim()
-
-        if value.startsWith('"') and value.endsWith('"') {
-            value = value.replace('"', "").replace('"', "")
         }
-
-        process.setEnv(key, value)
-    })
+    }
 }
